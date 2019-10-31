@@ -15,6 +15,7 @@ class WxyVue {
         //遍历defineReactive
         Object.keys(obj).forEach(key => {
             this.defineReactive(obj, key, obj[key])
+            this.proxyData(key)//添加代理this.$data.foo=>this.foo
         })
 
     }
@@ -30,6 +31,18 @@ class WxyVue {
             set(newVal) {
                 if (newVal == val) return;
                 val = newVal
+            }
+        })
+    }
+    //代理$data
+    proxyData(key) {
+        //需要给vue的实例定义属性
+        Object.defineProperty(this, key, {
+            get() {
+                return this.$data[key]
+            },
+            set(newVal) {
+                this.$data[key] = newVal
             }
         })
     }
