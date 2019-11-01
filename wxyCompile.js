@@ -49,6 +49,16 @@ class Compiler {
     textUpdater(node, value) {
         node.textContent = value
     }
+    htmlUpdater(node, value) {
+        node.innerHTML = value
+    }
+    clickUpdater(node, value) {
+        console.log("TCL: Compiler -> clickUpdater -> node", node)
+        node.onClick = value
+    }
+    modelUpdater(node, value) {
+        node.value = value
+    }
     //编译
     compaileElement(node) {
         //获取属性
@@ -62,15 +72,35 @@ class Compiler {
                 const dir = attrName.substring(2) //text
                 //执行相应的更新函数
                 this[dir] && this[dir](node, exp)
+            } else if (this.isEvent(attrName)) {
+                //截取变量名字@click
+                const dir = attrName.substring(1) //click
+                this.eventHandler(node, this.$vm, exp, dir);
             }
-
         })
     }
     //判断是不是指令
     isDirective(attr) {
         return attr.indexOf('k-') == 0
     }
+    isEvent(attr) {
+        return attr.indexOf('@') == 0
+    }
     text(node, exp) {
         this.update(node, exp, 'text')
+    }
+    html(node, exp) {
+        this.update(node, exp, 'html')
+    }
+    model(node, exp) {
+        this.update(node, exp, 'model')
+    }
+    eventHandler(node, vm, exp, dir) {
+        //验证是否是否有这个方法，有则获取这个函数
+        let fn = vm.$options.methods && vm.$options.methods[exp];
+        if (dir && fn) {
+            //存在给node添加时间监听 事件名称  函数      阻止冒泡
+            node.addEventListener(dir, fn.bind(vm), false);
+        }
     }
 }
