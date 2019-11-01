@@ -5,7 +5,7 @@ class WxyVue {
         this.$options = options
         //处理传入data
         this.$data = options.data
-        //响应化
+        //数据响应化
         this.observe(this.$data)
         //依赖收集
         new Compiler(options.el, this)
@@ -16,22 +16,22 @@ class WxyVue {
     }
     observe(obj) {
         //遍历必须存在,必须是对象
-        if (!obj || Object.prototype.toString.call(obj) !== '[object Object]') {
+        if (!obj || Object.prototype.toString.call(obj) !== "[object Object]") {
             return;
         }
         //遍历defineReactive
         Object.keys(obj).forEach(key => {
+            //劫持数据
             this.defineReactive(obj, key, obj[key])
-            this.proxyData(key)//添加代理this.$data.foo=>this.foo
-        })
-
+            //添加代理this.$data.foo=>this.foo
+            this.proxyData(key)
+        });
     }
     //响应化处理
     defineReactive(obj, key, val) {
         this.observe(val)
         //创建dep和key一一对应
         const dep = new Dep()
-
         Object.defineProperty(obj, key, {
             //一个局部作用域的一个变量通过一个函数暴露给外界,形成一个闭包.不会被释放,会一直保存着key的值,有效的保存应用的状态
             get() {
@@ -40,9 +40,8 @@ class WxyVue {
             },
             //直接在set修改data的val值会产生无限循环,通过一个函数定义了一个局部作用域.
             set(newVal) {
-                if (newVal == val) { return; }
+                if (newVal == val) { return }
                 val = newVal
-                //通知更新
                 dep.notify()
             }
         })
@@ -68,7 +67,6 @@ class Dep {
     addDep(dep) {
         this.deps.push(dep)
     }
-
     notify() {
         this.deps.forEach(dep => dep.update())
     }
@@ -79,14 +77,16 @@ class Watcher {
         this.vm = vm
         this.key = key
         this.cb = cb
-        Dep.target = this//把当前的watcher的实例附加到Dep静态属性上
-        this.vm[this.key]//触发依赖收集
-        Dep.target = null;//防止多次添加到dev
+        //把当前的watcher的实例附加到Dep静态属性上
+        Dep.target = this
+        //触发依赖收集⚠️
+        this.vm[this.key]
+        //防止多次添加到dev
+        Dep.target = null
     }
-
     update() {
-        //            上下文            
+        //上下文
         this.cb.call(this.vm, this.vm[this.key])
+        console.log("TCL: Watcher -> update -> this.key", this.key)
     }
-
 }
